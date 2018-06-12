@@ -7,12 +7,26 @@
 #   Original file: Vlad Irnov (vlad DOT irnov AT gmail DOT com)
 # License: CC0, see http://creativecommons.org/publicdomain/zero/1.0/
 """
-hasheq: A VOoM markup mode for headlines marked as `# = `, `# == `, ...
+hasheq: A VOoM markup mode for headlines embedded in single-line hash
+comments.
 
-For example:
- # = Heading level 1
- # == Heading level 2
- # === Heading level 3
+Two formats are supported: hash-equals and hash-hash.
+
+Hash-equals (MediaWiki style):
+
+```
+# = Heading level 1
+# == Heading level 2
+# === Heading level 3
+```
+
+Hash-hash (Markdown style):
+
+```
+# # Heading level 1
+# ## Heading level 2
+# ### Heading level 3
+```
 """
 
 # = Imports
@@ -71,9 +85,10 @@ def hook_newHeadline(_, level, __, ___):  # noqa: E501 # pylint: disable=invalid
     heading_text is new headline string in Tree buffer (text after |).
     body_lines is list of lines to insert in body buffer.
     """
-    heading_text = 'NewHeadline'
+    level_char = _NEW_HEADING_LEVEL_CHAR
+    heading_text = _NEW_HEADING_TEXT
     body_lines = [
-        make_heading_line(level, heading_text),
+        make_heading_line(level, level_char, heading_text),
         '',
         ]
     return (heading_text, body_lines)
@@ -90,29 +105,34 @@ def hook_changeLevBodyHead(_, heading_line, level_delta):  # noqa: E501 # pylint
         return heading_line
 
     match = _HEADING_MATCH(heading_line)
-    level = len(match.group(1))
+    level_chars = match.group(1)
     heading_text = match.group(2)
+    level = len(level_chars)
 
     new_level = level + level_delta
     assert new_level >= 0
 
-    return make_heading_line(new_level, heading_text)
+    # Use the same level char as existing heading.
+    level_char = level_chars[0]
+
+    return make_heading_line(new_level, level_char, heading_text)
 
 
 # = Implementation
 
 # == Module constants
 
+_NEW_HEADING_LEVEL_CHAR = '='
+_NEW_HEADING_TEXT = 'NewHeadline'
 _LEADER = "# "
-_LEVEL = "="
-_HEADING_MATCH = re.compile(r"^# (=+)\s+(\S.*)\S*$").match
+_HEADING_MATCH = re.compile(r"^# (=+|#+)\s+(\S.*)\S*$").match
 
 
 # == Output formatting
 
-def make_heading_line(level, heading_text):
+def make_heading_line(level, level_char, heading_text):
     """Return a heading line suitable for inclusion in body text."""
-    return '%s%s %s' % (_LEADER, _LEVEL * level, heading_text)
+    return '%s%s %s' % (_LEADER, level_char * level, heading_text)
 
 
 def make_tree_line(level, heading_text):
