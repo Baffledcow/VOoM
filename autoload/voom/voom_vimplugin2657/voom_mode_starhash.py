@@ -31,7 +31,9 @@ COMMENT_LEADER = '/* '
 PREFIX1 = CHAR
 PREFIX2 = COMMENT_LEADER + CHAR
 
-HEADLINE_MATCH = re.compile(r'^(?:/\* )?(%s+)' % re.escape(CHAR)).match
+headline_match = re.compile(r'^(?:/\* )?(%s+)' % re.escape(CHAR)).match
+
+css_id_selector_match = re.compile(r'^#[^#].*{\s*$').match
 
 def hook_makeOutline(VO, blines):
     """Return (tlines, bnodes, levels) for Body lines blines.
@@ -44,8 +46,14 @@ def hook_makeOutline(VO, blines):
         if (not blines[i].startswith(PREFIX1)
             and not blines[i].startswith(PREFIX2)):
             continue
+
         bline = blines[i]
-        m = HEADLINE_MATCH(bline)
+
+        # Skip CSS id selectors (they look like headings).
+        if css_id_selector_match(bline):
+            continue
+
+        m = headline_match(bline)
         lev = len(m.group(1))
         head = bline[m.end(1):].strip()
         tline = '  %s|%s' % ('. '*(lev-1), head)
@@ -69,7 +77,7 @@ def hook_changeLevBodyHead(VO, h, levDelta):
     """Increase of decrease level number of Body headline by levDelta."""
     if levDelta==0: return h
 
-    m = HEADLINE_MATCH(h)
+    m = headline_match(h)
     level = len(m.group(1))
 
     new_markers = CHAR * (level + levDelta)
