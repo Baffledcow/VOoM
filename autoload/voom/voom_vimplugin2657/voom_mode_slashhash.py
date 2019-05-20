@@ -15,9 +15,9 @@ See |voom-mode-hashes|,  ../../../doc/voom.txt#*voom-mode-slashhash*
 
 Also supports a slash-star prefix for languages with C#-style single-line:
 
-// # heading level 1
-// ##heading level 2
-// ### heading level 3
+//# heading level 1
+//##heading level 2
+//### heading level 3
 """
 
 import sys
@@ -27,13 +27,11 @@ if sys.version_info[0] > 2:
 import re
 
 CHAR = '#'
-COMMENT_LEADER = '// '
+COMMENT_LEADER = '//'
 PREFIX1 = CHAR
 PREFIX2 = COMMENT_LEADER + CHAR
 
-headline_match = re.compile(r'^(?:// )?(%s+)' % re.escape(CHAR)).match
-
-css_id_selector_match = re.compile(r'^#[^#].*{\s*$').match
+headline_match = re.compile(r'^(?://)?(%s+)' % re.escape(CHAR)).match
 
 def hook_makeOutline(VO, blines):
     """Return (tlines, bnodes, levels) for Body lines blines.
@@ -48,10 +46,6 @@ def hook_makeOutline(VO, blines):
             continue
 
         bline = blines[i]
-
-        # Skip CSS id selectors (they look like headings).
-        if css_id_selector_match(bline):
-            continue
 
         m = headline_match(bline)
         lev = len(m.group(1))
