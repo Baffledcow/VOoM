@@ -7,14 +7,19 @@
 # License: CC0, see http://creativecommons.org/publicdomain/zero/1.0/
 """
 semieq: A VOoM markup mode for headlines embedded in single-line semicolon
-comments.
-
-Semi-hash (Markdown style):
+comments:
 
 ```
-; # Heading level 1
-; ## Heading level 2
-; ### Heading level 3
+;# Heading level 1
+;## Heading level 2
+;### Heading level 3
+```
+
+Also recognizes:
+```
+# Heading level 1
+## Heading level 2
+### Heading level 3
 ```
 """
 
@@ -47,7 +52,8 @@ def hook_makeOutline(_, body_lines):  # noqa: E501 # pylint: disable=invalid-nam
     levels = []
 
     for i in generate_range(len(body_lines)):
-        if not body_lines[i].startswith(_LEADER):
+        line = body_lines[i]
+        if not (line.startswith(_LEADER) or line.startswith(_LEADER2)):
             continue
 
         match = _HEADING_MATCH(body_lines[i])
@@ -113,8 +119,9 @@ def hook_changeLevBodyHead(_, heading_line, level_delta):  # noqa: E501 # pylint
 
 _NEW_HEADING_LEVEL_CHAR = '='
 _NEW_HEADING_TEXT = 'NewHeadline'
-_LEADER = "; "
-_HEADING_MATCH = re.compile(r"^; (=+|#+)\s+(\S.*)\S*$").match
+_LEADER = ";"
+_LEADER2 = "#"
+_HEADING_MATCH = re.compile(r"^;?(=+|#+)\s+(\S.*)\S*$").match
 
 
 # == Output formatting
